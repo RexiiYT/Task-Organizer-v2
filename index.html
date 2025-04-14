@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>منظّم المهام</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #3b82f6;
+      --bg-light: #f3f4f6;
+      --bg-dark: #111827;
+      --text-light: #1f2937;
+      --text-dark: #f9fafb;
+      --task-bg-light: #ffffff;
+      --task-bg-dark: #1e293b;
+      --shadow-light: rgba(0, 0, 0, 0.05);
+      --shadow-dark: rgba(255, 255, 255, 0.05);
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      padding: 2rem;
+      transition: background-color 0.3s, color 0.3s;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .light-mode {
+      background-color: var(--bg-light);
+      color: var(--text-light);
+    }
+    .dark-mode {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+    .container {
+      width: 100%;
+      max-width: 720px;
+      background-color: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 10px 30px var(--shadow-light);
+      transition: box-shadow 0.3s;
+    }
+    .dark-mode .container {
+      background-color: var(--task-bg-dark);
+      box-shadow: 0 10px 30px var(--shadow-dark);
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .theme-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .theme-toggle button {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background-color 0.3s;
+    }
+    .theme-toggle button:hover {
+      background-color: #2563eb;
+    }
+    .add-task {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      background-color: white;
+    }
+    .dark-mode input[type="text"] {
+      background-color: #334155;
+      border: 1px solid #475569;
+      color: white;
+    }
+    .add-task button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .add-task button:hover {
+      background-color: #2563eb;
+    }
+    .task {
+      background-color: var(--task-bg-light);
+      padding: 1rem;
+      border-radius: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s, background-color 0.3s;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeIn 0.4s forwards;
+    }
+    .dark-mode .task {
+      background-color: var(--task-bg-dark);
+      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
+    }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .task p {
+      margin: 0;
+      font-size: 1rem;
+    }
+    .task button {
+      background-color: #ef4444;
+      color: white;
+      border: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s;
+    }
+    .task button:hover {
+      background-color: #dc2626;
+    }
+    .empty-message {
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.1rem;
+      color: #9ca3af;
+    }
+    .dark-mode .empty-message {
+      color: #d1d5db;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="title">منظّم المهام</h1>
+    <div class="theme-toggle">
+      <button onclick="toggleTheme()" id="themeBtn">تبديل الوضع</button>
+      <button onclick="toggleLanguage()" id="langBtn">English</button>
+    </div>
+    <div class="add-task">
+      <input type="text" id="taskInput" placeholder="أدخل مهمة جديدة" />
+      <button onclick="addTask()" id="addBtn">أضف</button>
+    </div>
+    <div id="taskList"></div>
+  </div>
+  <script>
+    const taskInput = document.getElementById('taskInput');
+    const taskList = document.getElementById('taskList');
+    const body = document.body;
+    const title = document.getElementById('title');
+    const themeBtn = document.getElementById('themeBtn');
+    const langBtn = document.getElementById('langBtn');
+    const addBtn = document.getElementById('addBtn');
+
+    let lang = localStorage.getItem('lang') || 'ar';
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    const texts = {
+      ar: {
+        title: 'منظّم المهام',
+        themeBtn: 'تبديل الوضع',
+        langBtn: 'English',
+        addBtn: 'أضف',
+        placeholder: 'أدخل مهمة جديدة',
+        delete: 'حذف',
+        empty: 'لا توجد مهام حالياً'
+      },
+      en: {
+        title: 'Task Organizer',
+        themeBtn: 'Toggle Theme',
+        langBtn: 'العربية',
+        addBtn: 'Add',
+        placeholder: 'Enter new task',
+        delete: 'Delete',
+        empty: 'No tasks available'
+      }
+    };
+
+    function applyLanguage() {
+      document.documentElement.lang = lang;
+      title.textContent = texts[lang].title;
+      themeBtn.textContent = texts[lang].themeBtn;
+      langBtn.textContent = texts[lang].langBtn;
+      addBtn.textContent = texts[lang].addBtn;
+      taskInput.placeholder = texts[lang].placeholder;
+      updateTaskList();
+    }
+
+    function toggleLanguage() {
+      lang = lang === 'ar' ? 'en' : 'ar';
+      localStorage.setItem('lang', lang);
+      applyLanguage();
+    }
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function renderTask(text, index) {
+      const div = document.createElement('div');
+      div.className = 'task';
+      div.draggable = true;
+      div.dataset.index = index;
+
+      const p = document.createElement('p');
+      p.textContent = text;
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = texts[lang].delete;
+      delBtn.onclick = () => {
+        tasks.splice(index, 1);
+        updateTaskList();
+      };
+
+      div.appendChild(p);
+      div.appendChild(delBtn);
+
+      div.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', index);
+      });
+
+      div.addEventListener('dragover', (e) => e.preventDefault());
+
+      div.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const draggedIndex = +e.dataTransfer.getData('text/plain');
+        const targetIndex = +div.dataset.index;
+        const temp = tasks[draggedIndex];
+        tasks.splice(draggedIndex, 1);
+        tasks.splice(targetIndex, 0, temp);
+        updateTaskList();
+      });
+
+      taskList.appendChild(div);
+    }
+
+    function updateTaskList() {
+      taskList.innerHTML = '';
+      if (tasks.length === 0) {
+        const msg = document.createElement('div');
+        msg.className = 'empty-message';
+        msg.textContent = texts[lang].empty;
+        taskList.appendChild(msg);
+      } else {
+        tasks.forEach((task, i) => renderTask(task, i));
+      }
+      saveTasks();
+    }
+
+    function addTask() {
+      const text = taskInput.value.trim();
+      if (text) {
+        tasks.push(text);
+        updateTaskList();
+        taskInput.value = '';
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = body.classList.toggle('dark-mode');
+      body.classList.toggle('light-mode', !isDark);
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+
+    function loadTheme() {
+      const theme = localStorage.getItem('theme') || 'light';
+      body.classList.add(theme + '-mode');
+    }
+
+    loadTheme();
+    applyLanguage();
+    updateTaskList();
+  </script>
+</body>
+</html>
